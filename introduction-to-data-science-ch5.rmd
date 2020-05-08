@@ -1,0 +1,114 @@
+
+---
+title: Introduction to data science - Ch5
+output: html_notebook
+---
+# Welcome to melda.io
+
+You can start working by adding new cells. 
+
+Use the button "Add new cell" located right below this cell.
+## What is sampling?
+
+Sampling is an important step of the whole data science methodology : 
+![](https://raw.githubusercontent.com/scizmeli/datascience_class_helper_files/master/Capture.PNG)
+
+sampling -> representative small portion
+
+## why sampling? 
+- because it's faster to run and graph smaller datasets
+- to create train and test samples
+
+## Sampling for training and testing  
+
+- Split the test into training and test sets
+- Develop model on the training set
+- Test the validity of the model with the test set (also called the hold-out set)
+
+![test and train](https://raw.githubusercontent.com/scizmeli/datascience_class_helper_files/master/test%20and%20train.png)
+
+### Keep in mind : 
+
+- The sampled dataset needs to be representative of the initial dataset
+- Split early. Don't wait.
+- Some people also use training-calibration-test
+
+## Practice
+Let us sample segment the customer data using sampling. 
+
+First read the data :
+```{r}
+custdata <- read.table('https://github.com/scizmeli/datascience_class_helper_files/raw/master/custdata.tsv', header=T, sep='\t')
+dim(custdata)
+head(custdata)
+```
+To perform a sampling with 10% of the data for the test and 90% for the training :
+```{r}
+
+set.seed(100)# her seferinde degismemesi icin set.seed() fonksiyonun kullanılması gerekir
+
+# Create a new column __gp__ in the dataset and populate it with random numbers : 
+custdata$gp <- runif(dim(custdata)[1])# rassal sayı üretilir
+# yeni bir sütun yaratıp gp adını verdik
+
+# Create training and test sets
+testSet <- subset(custdata, custdata$gp <= 0.1) 	# Note: 2 
+trainingSet <- subset(custdata, custdata$gp > 0.1) 	# Note: 3 
+# Check the dimensions of the created sets
+dim(testSet)[1]
+dim(trainingSet)[1]
+
+# Always double-check
+nrow(testSet) + nrow(trainingSet) == nrow(custdata)
+
+```
+## Group sampling
+
+If every row of your dataset does not have one-to-one correspondance with your 
+parameter to model, then segmentation with sample group would not work. Then group
+sampling is needed. As an example, consider the following dataset :
+```{r}
+household_id <- factor(c("hh1", "hh2",  "hh2",  "hh2",  "hh3",  "hh3",  "hh4",  "hh5",  "hh5",  "hh5"))
+cust_id <- factor(c("cust1","cust2","cust3","cust1","cust1","cust3","cust2","cust3","cust4","cust4"))
+income <- round(runif(length(household_id))*100000)
+hhdata <- data.frame(household_id=household_id, cust_id=cust_id, income=income)
+hhdata
+```
+We can now create the **gp** column based on the group *household_id*
+```{r}
+hh <- unique(hhdata$household_id)
+households <- data.frame(household_id = hh, gp = runif(length(hh)))
+hhdata <- merge(hhdata, households, by="household_id")# brlestirme
+head(hhdata)
+```
+### Keep in mind : 
+
+- We did segmentation by creating a sample group column -> it is repeatable (good when debugging)
+- We could also use R function *sample()* but it would not be repeatable
+- Segmentation with sample group works only if there is **ONE** line for each customer. Otherwise consider group sampling
+
+
+```{r}
+# ornekleme islemi gerceklestirildi
+set.seed(333)
+df<- mtcars
+df$gp <- runif(dim(mtcars)[1])
+testSet <- subset(df, df$gp <= 0.2) 	# Note: 2 
+trainingSet <- subset(df, df$gp > 0.2) 	# Note: 3 
+
+dim(test)
+```
+```{r}
+#örnekleme islemi gerceklestirildi
+set.seed(333)
+
+sample = round(nrow(mtcars)*.80) 
+index <- sample(seq_len(nrow(mtcars)), size = sample)
+
+train <- mtcars[index, ]
+test <- mtcars[-index, ]
+
+dim(test)
+
+```
+

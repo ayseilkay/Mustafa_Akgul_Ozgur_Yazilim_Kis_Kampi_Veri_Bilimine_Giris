@@ -1,0 +1,188 @@
+
+---
+title: "Introduction to data science - Ch5-Ch6"
+output:
+  html_document:
+    df_print: paged
+---
+# Linear And Logistic Regression
+__What is Regression?__
+Regression is a statistical measurement that attempts to determine the strength of the relationship between one dependent variable(Y)  
+and a series of other changing variables(X).
+__Linear regression__ shows us linear relationship between variables
+
+Linear regression builds a model such that the predicted numerical output is a linear
+additive function of the inputs.
+
+ If you’re trying to predict a numerical quantity like profit, cost, or sales volume, you should always 
+ try linear regression first.
+**Logistic regression** is more differant from linear regression because Dependent variable in Logistic regression is discrete variable 
+
+Logistic regression always predicts a value between 0 and 1
+y = called the __*dependent*__ or __*response*__ variable
+x = called the __*independent*__ or __*explanatory*__ variables
+![](https://raw.githubusercontent.com/scizmeli/datascience_class_helper_files/master/regression.PNG)
+```{r}
+download.file("https://github.com/scizmeli/datascience_class_helper_files/raw/master/psub.RData", "psub.RData")
+load("psub.RData")
+dtrain <- subset(psub,ORIGRANDGROUP >= 500)
+dtest <- subset(psub,ORIGRANDGROUP < 500)
+model <- lm(log(PINCP,base=10) ~ AGEP + SEX + COW + SCHL,data=dtrain)
+dtest$predLogPINCP <- predict(model,newdata=dtest)
+class(dtest$predLogPINCP)# numeric tipinde 
+dtrain$predLogPINCP <- predict(model,newdata=dtrain)
+```
+ORIGRANDGROUP for spliting dataset
+**COW** : class of Worker
+
+**AGEP** : Age of Person
+
+**SEX** : Sex of Person
+
+**SCHL** : Educational Attainment
+
+**PINCP** :Total person's income
+```{r}
+model <- lm(log(PINCP,base=10) ~ AGEP + SEX + COW + SCHL, data=dtrain)
+class(model)# model lm nesnesidir
+summary(model)
+# p value <0.05 ten oldugu icin h0 red edilir
+# p value >0.05 oldugu icin h0 red edilemez
+# yanında *** varsa çok anlamlıdır
+# r2 açıklabilrilik yüzdesidir. Bagımsız degiskenlerdeki degisikliklerin bagımslı degiskendeki açıklama basarısıdır
+
+```
+# Varsayımlarımızı kontrol etmemizi saglayan grafik turleridir.Grafik lineerligi bozan gözlemleri bize sayısal olarak bize vermektedir
+The **Residual vs Fitted plot** is used to detect non-linearity, unequal error variances, and outliers.
+The **Q-Q plot**, or quantile-quantile plot, is a graphical tool to help us assess if a set of data plausibly came from some theoretical distribution such as a Normal or exponential
+The **Scale-Location Plot** is how you can check the assumption of equal variance (homoscedasticity). It's good if you see a horizontal line with equally (randomly) spread points.
+The **Residuals vs. Leverage plots** helps you identify influential data points on your model. Outliers can be influential
+```{r}
+plot(model)
+#DİKKAT:
+# 2.grafik qqplot : normallik varsayımını inceledigimiz grafik
+# outlier(uc deger):cok uzakta bir deger varsa ben o degeri farketmediysem .modelimin dogrultusunda cok kucuk yada cok buyuk deger r2 yi büyük olcude etkiler.outlier r2 yi çok etkiler
+# aykırı deger: r2 degerini cok fazla etkilemez .
+```
+```{r}
+dtest$predLogPINCP <- predict(model,newdata=dtest)
+```
+```{r}
+dtrain$predLogPINCP <- predict(model,newdata=dtrain)
+```
+```{r}
+library(ggplot2)
+ggplot(data=dtest,aes(x=predLogPINCP,y=log(PINCP,base=10))) +
+geom_point(alpha=0.2,color="black") +
+geom_smooth(aes(x=predLogPINCP,
+y=log(PINCP,base=10)),color="black") +
+geom_line(aes(x=log(PINCP,base=10),
+y=log(PINCP,base=10)),color="blue",linetype=2) +
+scale_x_continuous(limits=c(4,5)) +
+scale_y_continuous(limits=c(3.5,5.5))
+```
+```{r}
+ggplot(data=dtest,aes(x=predLogPINCP,
+y=predLogPINCP-log(PINCP,base=10))) +
+geom_point(alpha=0.2,color="black") +
+geom_smooth(aes(x=predLogPINCP,
+y=predLogPINCP-log(PINCP,base=10)),
+color="black")
+
+#The plot is used to detect non-linearity, unequal error variances, and outliers.
+```
+```{r}
+coefficients(model)
+```
+# Logistic Regression
+```{r}
+download.file("https://github.com/scizmeli/datascience_class_helper_files/raw/master/NatalRiskData2.RData", "NatalRiskData2.RData")
+load("NatalRiskData2.RData")
+```
+```{r}
+train <- sdata[sdata$ORIGRANDGROUP<=5,]
+test <- sdata[sdata$ORIGRANDGROUP>5,]
+```
+Variable         Type         Description
+
+**atRisk:**     Logical       TRUE if 5-minute Apgar score < 7; FALSE otherwise  ##logical: true yada false
+
+**PWGT:**       Numeric       Mother’s prepregnancy weight
+ 
+**UPREVIS:**    Numeric       (integer) Number of prenatal medical visits
+
+**CIG_REC:**    Logical       TRUE if smoker; FALSE otherwise
+ 
+**GESTREC:**    Categorical   Two categories: <37 weeks (premature) and >=37 weeks
+
+**DPLURAL:**    Categorical   Birth plurality, three categories: single/twin/triplet+
+
+**ULD_MECO:**   Logical       TRUE if moderate/heavy fecal staining of amniotic fluid
+
+**ULD_PRECIP:** Logical      TRUE for unusually short labor (< three hours)
+
+**ULD_BREECH:** Logical      TRUE for breech (pelvis first) birth position
+
+**URF_DIAB:**   Logical      TRUE if mother is diabetic
+
+**URF_CHYPER:** Logical      TRUE if mother has chronic hypertension
+
+**URF_PHYPER:** Logical      TRUE if mother has pregnancy-related hypertension
+
+**URF_ECLAM:**  Logical      TRUE if mother experienced eclampsia: pregnancyrelated seizures
+
+**Building a logistic regression model**
+```{r}
+complications <- c("ULD_MECO","ULD_PRECIP","ULD_BREECH")
+riskfactors <- c("URF_DIAB", "URF_CHYPER", "URF_PHYPER",
+"URF_ECLAM")
+y <- "atRisk"
+x <- c("PWGT",
+"UPREVIS",
+"CIG_REC",
+"GESTREC3",
+"DPLURAL",
+complications,
+riskfactors)
+fmla <- paste(y, paste(x, collapse="+"), sep="~")
+```
+```{r}
+print(fmla)
+```
+```{r}
+# glm -logistik regresyon modeli
+# glm- generealize lineer model
+# sınıflandırma isin kullanılır
+model <- glm(fmla, data=train, family=binomial(link="logit"))# argümanlarını girmemiz gerekir
+```
+This is similar to the linear regression call to lm(), with one additional argument:
+family=binomial(link="logit").
+```{r}
+summary(model)
+# logistic regresyonda AIC degerine bakıyoruz
+# AIC degeri dusuk olan daha saglam bir modeldir diyoruz.
+# Logistic regresyonda yorumlama yaparken bir birimlik artıs oldugunda y de bir birimlik artıs oluyo diye yorum yapamayız. odds degerine bakmalıyız.
+# veri setine baktıgımızda annenin sigara icmesindeki bir birimlik artıs bebegin riske girme oranı artar diye bir yorum yapılamaz.
+```
+```{r}
+plot(model)
+```
+Applying the logistic regression model
+Making Prediction
+```{r}
+train$pred <- predict(model, newdata=train, type="response")
+test$pred <- predict(model, newdata=test, type="response")
+```
+```{r}
+library(ggplot2)
+ggplot(train, aes(x=pred, color=atRisk, linetype=atRisk)) +
+geom_density()
+```
+Distribution of score broken up by positive examples (TRUE) and negative examples (FALSE)
+**The model coefficients**
+```{r}
+coefficients(model)
+```
+**Lets About Talking**
+What is the mean of these coefficients? Let's discuss
+What is the mean of these AIC? Let's discuss

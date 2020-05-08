@@ -1,0 +1,65 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r}
+
+#install.packages("tidyverse")
+#install.packages("party")
+#install.packages("knitr")
+#install.packages("hexbin")
+#install.packages("naniar")
+#install.packages("ROCR")
+#install.packages("zeallot")
+#install.packages("dplyr")
+install.packages("ggplot2")
+
+library(tidyverse)
+library(party)
+library(knitr)
+library(hexbin)
+library(naniar)
+library(ROCR)
+library(dplyr)
+
+```
+
+```{r}
+custdata1 <- read.table("https://github.com/scizmeli/datascience_class_helper_files/raw/master/custdata.tsv",header=T,sep='\t') #control
+
+
+custdata <- read.table('https://github.com/scizmeli/datascience_class_helper_files/raw/master/custdata1.tsv',header=T,sep=',')
+
+
+
+```
+
+```{r}
+#custdata$housing.type
+#custdata$sex
+
+ggplot(custdata) + geom_bar(aes(x=marital.stat,
+fill=housing.type))
+
+ggplot(custdata) + geom_bar(aes(x=marital.stat,
+fill=housing.type),
+position="dodge")
+
+```
+```{r}
+# arac sayısıyla ev tipi
+#custdata$num.vehicles
+
+
+ggplot(custdata) + geom_bar(aes(x=num.vehicles,
+fill=housing.type))
+
+```
+```{r}
+
+
+```
+

@@ -1,0 +1,228 @@
+
+---
+title: Introduction to data science - Ch8
+output: html_notebook
+---
+# Evaluating models
+
+Evaluating a model is done during the training stage. To goal is to quantitatively determine if the model produces interesting
+results with the training data.
+
+We calculate summary metrics (scores) helping us to evaluate the model. 
+
+
+## The null model 
+Also called the ideal model. It is the baseline. Our model has to perform better than the null model. Otherwise our model 
+will be interesting to no one. It can be : 
+
+- a constant outcome (a model returning same result every time)
+- an independent outcome (not related with )
+
+For a categorical problem : the null model might be the most popular category.
+
+For a numerical problem (scoring) : the null model could be the average value.
+
+For multiple variables : the null model might be the best single-variable model
+## Evaluating classification models
+
+The following metrics are used to evaluate classification model performance : 
+
+- accuracy
+- precision
+- recall
+
+Let us study them with an example from the *Spambase* [dataset](http://mng.bz/e8Rh). It is a database of 
+metrics derived of emails. Our task is to create a spam filter through logistic regression.
+
+Let us first read the dataset into a variable : 
+
+```{r}
+spamD <- read.table("https://github.com/scizmeli/datascience_class_helper_files/raw/master/spamD.tsv", header=T, sep="\t")
+
+dim(spamD)
+head(spamD)
+```
+## Exercise 4.1 
+
+What can you say about this data?
+```{r}
+#Set train and test samples 
+spamTrain <- subset(spamD,spamD$rgroup>=10)
+spamTest <- subset(spamD,spamD$rgroup<10)
+
+#Select columns to be included in the modeling
+spamVars <- setdiff(colnames(spamD),list('rgroup','spam'))
+
+#Our formula will be long. Let us create it from a string
+spamFormula <- as.formula(paste('spam=="spam"', paste(spamVars,collapse=' + '),sep=' ~ '))
+spamFormula
+```
+Consult the base R cheatsheet for more info about formulas for modeling in R :
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/base-r-cheatsheet-screenshot.png)
+
+You can download the pdf version [here](https://github.com/scizmeli/datascience_class_helper_files/raw/master/base-r-cheatsheet.pdf).
+Now that we have our data and model formula set correctly, let us perform logistic regression as a method
+of classification :
+```{r}
+spamModel <- glm(spamFormula,family=binomial(link='logit'), data=spamTrain)
+summary(spamModel)
+```
+```{r}
+# Now compute predictions using the training and test data
+spamTrain$pred <- predict(spamModel,newdata=spamTrain, type='response')
+spamTest$pred <- predict(spamModel,newdata=spamTest, type='response')
+```
+A sample of the results :
+```{r}
+sample <- spamTest[c(7,35,224,327),c('spam','pred')]
+print(sample)
+```
+Preparing the confusion matrix :
+```{r}
+cM <- table(truth=spamTest$spam,prediction=spamTest$pred>0.5)
+print(cM)
+```
+Explanation of the confusion matrix : 
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/confusion-matrix-explained.png)
+The confusion matrix provides a lot of useful information. Let's get started with accuracy:
+
+### Accuracy
+**Accuracy** is the most important performance metric. It is measured by the *confusion matrix*. 
+
+Accuracy of classification is simply the number of items categorized correctly divided by the
+total number of items. In this case we achieved 92% accuracy.
+
+### Precision & Recall
+
+Precision is the fraction of the items correctly classified to the total class size. So precision is 
+TP/(TP+FP), about 0.92 in our spam filter case. It is coincidence that accuracy and precision are close to each other.
+
+Recall is TP/(TP+FN), i.e. the fraction of the things that are in the class are detected by the 
+classifier. In our case it is 88%. 
+
+Precision answers the question : "how often can our classifier is able to correctly attribute to the 
+right class. As an example, the Akismet spam filter has a precision of 99.99%. In a spam detection 
+application, precision is more important than recall.
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/accuracy-precision-recall1.png)
+
+## Evaluating probabilities
+
+- The second way to evaluate the probabilty models is to look at the probabilities they compute
+- These metrics are very performant and technical
+- But they difficult to translate to easly understandable business goals -> not necessarily to be shared with clients
+The double-density plot allows us to check the probability tresholds : We want in-class predictions to be high, 
+off-class predictions to be low :
+```{r}
+library(ggplot2)
+ggplot(data=spamTest) +
+    geom_density(aes(x=pred,color=spam,linetype=spam))
+```
+## Keep in mind
+
+- If your input data is unbalanced, accuracy is not a good indicator
+- You can trade off between precision and recall by playing with the 0.5 score threshold
+- Also look at other evaluators : ROCR, log-likelihood, deviance, AIC and entropy :)
+
+## Evaluating scoring models
+
+### Residuals
+Residuals is the first thing to look at to evaluate the performance of a regression (scoring) model. Let 
+us try to fit a linear model into a 2nd degree polynomial and plot the residuals for a **visual** analysis :
+
+```{r}
+d <- data.frame(y=(1:10)^2,x=1:10)
+model <- lm(y~x,data=d)
+d$prediction <- predict(model,newdata=d)
+library('ggplot2')
+ggplot(data=d) + 
+geom_point(aes(x=x,y=y)) +
+geom_line(aes(x=x,y=prediction),color='blue') +
+geom_segment(aes(x=x,y=prediction,yend=y,xend=x))
+
+```
+### Root mean square error RMSE
+
+# metrelerle olcum yapıyorsak metreyle rmse degeri hatasını verebiliriz.
+
+- Shows goodness-to-fit # kusursuz dogruya ne kadar yakınız onu gösterir
+- Same units as *y*
+- Manu algorithms to minimise RMSE
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/RMSE.png)
+
+### R-squared R^2
+# 1 ideal korelasyon
+# x ve y arasındaki iliskinin kuvvetini bize verir
+# outlier degerlerden cok etkilenir.
+
+- R^2 is the coefficient of determination
+- It is dimensionless and is within range [0,1]
+- Tells us about the strength of the relationship between *x* and *y*
+- It tells **how much variations in y is explained by x**
+- In R, you can extract the value of R2 using : ```summary(model_object)$r.squared```
+
+A good business goal with R^2 could be : **We want the model to explain 80% of the ...**
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/R2.jpg)
+
+## Evaluating clustering models
+- Evaluating clustering models are difficult because they are nonsupervised
+- The first evaluation is the number of detected clusters
+- We also look at how many items are in the cluster -> avoid too big and too small clusters
+- We want clusters to be as compact as possible (see below distance metrics)
+
+Let's create random points to be clustered :
+```{r}
+# Let's create random points to be clustered
+set.seed(32297)
+d <- data.frame(x=runif(100),y=runif(100))
+clus <- kmeans(d,centers=5)
+class(clus)
+d$cluster <- clus$cluster
+```
+And then plot clustering results :
+```{r}
+library('ggplot2'); library('grDevices')
+h <- do.call(rbind, lapply(unique(clus$cluster),function(c) { 
+    f <- subset(d,cluster==c); f[chull(f),]
+}))
+
+ggplot() +
+    geom_text(data=d,aes(label=cluster,x=x,y=y,
+    color=cluster),size=3) +
+    geom_polygon(data=h,aes(x=x,y=y,group=cluster,fill=as.factor(cluster)),alpha=0.4,linetype=0) +
+    theme(legend.position = "none")
+```
+We can check number of items in each cluster with the function *table()* :
+```{r}
+table(d$cluster)# her sınıfta kac tane data var
+tail(d$cluster)
+```
+Calculating the mean distance from points in one cluster to points in another : 
+```{r}
+# kümeler arası benzerligi ve kümeler ici benzerligi hesaplayan kod blogu
+library('reshape2')
+
+n <- dim(d)[1]
+
+pairs <- data.frame(
+        ca = as.vector(outer(1:n,1:n,function(a,b) d[a,'cluster'])),
+        cb = as.vector(outer(1:n,1:n,function(a,b) d[b,'cluster'])),
+        dist = as.vector(outer(1:n,1:n,function(a,b)
+                sqrt((d[a,'x']-d[b,'x'])^2 + (d[a,'y']-d[b,'y'])^2)))
+        )
+
+dcast(pairs,ca~cb,value.var='dist',mean)
+
+
+# diagonal olması kendi arasındaki degiskenligi 1.satır 1.sütun ,2.satır 2.sütun gibi ----> 1.kümeyle 1.küme
+#1. satır 3. sütun demek ise 1. kümeyle 3. küme arasındaki degiskenligin sayısal karsılıgını verir
+```
+We seek to have intra-cluster distances (the diagonal elements of the table) to be smaller than inter-cluster 
+distances (the off-diagonal elements of the table)
+## Keep in mind
+- Distance metrics do not explain business needs
+- One way is to make a classification or scoring. Use a different parameter than the one used in the clustering

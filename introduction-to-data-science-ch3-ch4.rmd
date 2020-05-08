@@ -1,0 +1,283 @@
+
+---
+title: "Introduction to data science - Ch3-Ch4"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+# VERİ TEMİZLEMESİ VE KALİTE KONTROLÜ (Managing data)
+This chapter covers
+
+- Fixing data quality problems
+- Organizing your data for the modeling process
+```{r}
+library(ggplot2)
+```
+__Cleaning data__
+
+Treating missing values (NAs)
+```{r}
+custdata <- read.table('https://github.com/scizmeli/datascience_class_helper_files/raw/master/custdata1.tsv',header=T,sep=',')
+```
+```{r}
+cust_summary<-custdata[is.na(custdata$housing.type),c("recent.move","num.vehicles")]
+head(cust_summary)
+
+```
+**TO DROP OR NOT TO DROP?**
+
+There are two things you can do with these variables:
+
+drop the rows with missing values or convert the missing values to a meaningful value.
+**MISSING VALUES IN CATEGORICAL DATA**
+```{r}
+summary(custdata[,c("housing.type" ,"recent.move" , "num.vehicles" , "is.employed")])
+# housing.type,recent.move ve num.vehicles da  56 tane degiskende bos gözlem var ve hepsi aynı yerde 
+```
+The is.employed variable is missing many values.
+
+**Why?**
+
+Is employment status unknown?
+```{r}
+custdata$is.employed.fix <- ifelse(is.na(custdata$is.employed),
+"missing",
+ifelse(custdata$is.employed==T,
+"employed",
+"not employed"))
+summary(as.factor(custdata$is.employed.fix))
+```
+```{r}
+# missing degerleri yerine iş aramaya gerek duymayan insanlarla dolduruyoruz
+custdata$is.employed.fix <- ifelse(is.na(custdata$is.employed),
+"not in active workforce",
+ifelse(custdata$is.employed==T,
+"employed",
+"not employed"))
+summary(as.factor(custdata$is.employed.fix))
+```
+**Why a new variable?**
+__MISSING VALUES IN NUMERIC DATA__
+```{r}
+summary(custdata$Income)
+```
+```{r}
+#bos degerleri ortalamayla doldururuz
+# medyan uc ve aykırı degerlerden çok etkilenmez
+# na.rm parametresi NA degerlerini siler ve yerine ortalama degeri koyar 
+meanIncome <- mean(custdata$Income, na.rm=T)
+meanIncome
+```
+You believe that income is still an important so you still want to use the variable. What do you do?
+WHEN VALUES ARE MISSING **RANDOMLY**
+
+You might believe that the data is missing because of a faulty sensor—in other words,
+the data collection failed at random. In this case, you can replace the missing values
+with the expected, or mean, income
+```{r}
+# medyan : ortadaki sayı
+# mean: ortalama 
+meanIncome <- mean(custdata$Income, na.rm=T)
+```
+```{r}
+Income.fix <- ifelse(is.na(custdata$Income),
+meanIncome, custdata$Income)
+```
+```{r}
+summary(Income.fix)
+# cok fazla missing data var ve biz mean degerlerini koyunca cok fazla veri kaybı yaşamıs olabiliriz
+```
+```{r}
+# eger  na degerleri rastgele olusmussa mean degerleriyle doldurabilriz.
+```
+
+
+WHEN VALUES ARE MISSING **SYSTEMATICALLY**
+
+One thing you can do is to convert the numeric data into categorical data, and then
+use the methods that we discussed previously. In this case, you would divide the
+income into some income categories of interest, such as “below $10,000,” or “from
+$100,000 to $250,000” using the cut() function, and then treat the NAs as we did when
+working with missing categorical values
+```{r}
+breaks <-c(0, 10000, 50000, 100000, 250000, 1000000)
+```
+```{r}
+Income.groups <-
+cut(custdata$Income,breaks = breaks, include.lowest=T)
+```
+```{r}
+summary(Income.groups)
+```
+```{r}
+Income.groups <- as.character(Income.groups)
+```
+```{r}
+#sürekli degiskeni kesikli degiskene cevirebilriz
+Income.groups <- ifelse(is.na(Income.groups),"no income", Income.groups)
+
+summary(as.factor(Income.groups))
+```
+**Tracking original NAs with an extra categorical variable**
+
+The missingIncome variable lets you differentiate the two kinds of zeros in the
+data: 
+
+the ones that you are about to add, 
+
+and the ones that were already there.
+```{r}
+missingIncome <- is.na(custdata$Income)
+Income.fix <- ifelse(is.na(custdata$Income), 0, custdata$Income)
+```
+In summary, to properly handle missing data you need to know why the data is
+missing in the first place.
+
+If you don’t know whether the missing values are random or systematic, 
+we recommend assuming that the difference is systematic
+# Data transformations
+
+
+The purpose of data transformation is to make data easier to model—and easier to
+understand.
+In this section, we’ll look at some useful data transformations and when to use
+them: converting continuous variables to discrete; normalizing variables; and log
+transformations.
+Normalizing income by state
+```{r}
+# aggregate fonksiyonu
+# FUN bir metoddur ve medyan yazdıgımızda medyanı calıstırır.
+medianincome <- aggregate(income~state.of.res,custdata,FUN=median)
+colnames(medianincome) <- c('State','Median.Income')
+summary(medianincome) 
+```
+```{r}
+is.data.frame(medianincome)
+```
+```{r}
+head(medianincome)
+```
+```{r}
+# merge fonksiyonu iki dataframe i birlestiriyor-----sql de left join e karsılık gelir 
+custdata <- custdata[, names(custdata)!="Median.Income"]
+custdata <- merge(custdata, medianincome, by.x = "state.of.res", by.y="State")
+```
+```{r}
+head(custdata[, c("state.of.res","income","Median.Income")])
+```
+```{r}
+summary(custdata[, c("state.of.res","income","Median.Income")])
+```
+```{r}
+# her bir income degerini kendi degerine bolduk
+# with diyerek dataframein ismini girmeden işlemleri gerceklestirebiliyoruz
+# custdata$income gibi yazmaya gerek kalmamıs oluyor
+custdata$income.norm <- with(custdata, income/Median.Income)
+```
+```{r}
+summary(custdata$income.norm)
+```
+```{r}
+# na lar sistematik yerlestirilmisse degisken donusumleri yapılabilmelidir.
+# bu nedenle normalizasyon islemi gerceklestirdik
+```
+
+
+Normalize income by Median.Income.
+```{r}
+ggplot(subset(custdata, custdata$income > 1000), aes(x=income, y=as.numeric(health.ins))) +
+   geom_point(alpha=0.5, position=position_jitter(w=0.05, h=0.05)) + geom_smooth() + scale_x_log10() + 
+   annotation_logticks(sides="bt") 
+```
+You see that you can replace the income variable with a Boolean variable that indicates whether income is less than $20,000
+```{r}
+custdata$income.lt.20K <- custdata$income < 20000
+summary(custdata$income.lt.20K)
+```
+```{r}
+brks <- c(0, 25, 65, Inf)
+custdata$age.range <- cut(custdata$age,
+breaks=brks, include.lowest=T)
+summary(custdata$age.range)
+```
+# NORMALIZATION AND RESCALING
+
+Normalization is useful when absolute quantities are less meaningful than relative ones.
+For example, you might be less interested in a customer’s absolute age than you
+are in how old or young they are relative to a “typical” customer. Let’s take the mean
+age of your customers to be the typical age. You can normalize by that, as shown in the
+following listing
+```{r}
+summary(custdata$age)
+```
+```{r}
+meanage <- mean(custdata$age)
+custdata$age.normalized <- custdata$age/meanage
+summary(custdata$age.normalized)
+```
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/age-plot.PNG)
+Summarizing age
+You can rescale your data by using the standard deviation as a unit of distance.
+```{r}
+summary(custdata$age)
+```
+```{r}
+meanage <- mean(custdata$age)
+stdage <- sd(custdata$age)
+meanage
+stdage
+
+custdata$age.normalized <- (custdata$age-meanage)/stdage
+summary(custdata$age.normalized)
+```
+```{r}
+par(mfrow=c(1,3))
+hist(custdata$age,col="darkmagenta")
+mean_age <- mean(custdata$age)
+stdage <- sd(custdata$age)
+hist(custdata$age-mean_age,col="darkgreen")
+hist((custdata$age-mean_age)/stdage,col="darkblue")
+par(mfrow=c(1,1))
+
+```
+
+
+Now, values less than -1 signify customers younger than typical; values greater than 1
+signify customers older than typical.
+```{r}
+# ÖZGÜR YAZILIM MADDELERİ
+# Richard Stallman
+# GNU : GNU's Not Unix =>unix mimarisini temal alan fakat Unix olmayan ,tamamıyla özgür bir işletim sistemi olusturmak icin başlatılan bir projedir
+# Çekirdek donanımlarla iletisim kurmamızı saglar.kaynakların nasıl paylasacagını belirler.hangi uygulamanın calısacagının kararını verir
+# GNU/Lunix denir.
+# GNU projein adı,Linux da çekirdegin adıdır.
+#özgürlük 0: yazılım, her türlü ihtiyac için herhangi bir engel olmadan calıştırılabilmeli
+#özgürlük 1: yazılım, her türlü ihtiyac için herhangi bir engel olmadan degiştirilebilmeli
+#özgürlük 2: yazılım, her türlü ihtiyac için herhangi bir engel olmadan paylaşılabilmeli
+#özgürlük 3: yazılım üzerinde degisiklik yapıldıktan sonra da özgürce dağıtılabilmeli
+```
+
+#LOG TRANSFORMATION
+```{r}
+# logaritmik transformation işlem kolaylıgı saglar.
+# uc ve aykıırı degerlerle bas etmek icin kullanılır.
+# verimiz tam olarak normal degildir
+# negatif degerlerin varlıgında log dönüsümü yapılamaz
+# verilerimizin büyüklügü hangi olceklere göre dagılıyor.sıkısıp arada kalmıs verileri acıp daha dikkatli bakmak istersek
+# log donusumu kullanılır
+```
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/log-transf.PNG)
+In regression, for example, the choice of logarithm affects the magnitude of the coefficient that corresponds to the logged variable, 
+but it does not affect the value of the outcome. 
+
+We like to use log base 10 for monetary amounts,
+because orders of ten seem natural for money: $100, $1000, $10,000, and so on. The
+transformed data is easy to read
+Taking the logarithm only works if the data is non-negative.
+
+There are other transforms, such as arcsinh, that you can use to decrease data range if you have zero or negative values.
+
+We don’t always use arcsinh, because we don’t find the values of the transformed data to be meaningful.

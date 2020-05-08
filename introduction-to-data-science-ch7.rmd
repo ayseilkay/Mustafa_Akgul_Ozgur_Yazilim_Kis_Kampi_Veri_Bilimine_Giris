@@ -1,0 +1,126 @@
+
+---
+title: "Introduction to data science - Ch7"
+output:
+  html_document:
+    df_print: paged
+---
+# From problem to model building 
+
+In this section we will cover :
+- mapping problems to machine learning models 
+- evaluate the quality and effectiveness of models 
+
+The first section will provide an overview of the basic problems that can be solved 
+with data science and how to choose the right type of model for the given problem. 
+
+We will then evaluate if a model is performing well enough for the 
+needs of the project.
+It takes great experience and insigt to know how to translate problem (question) to 
+a usable model :
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/problem-model.png)
+# Data science questions
+
+There are common questions that are common to seek answers in data science : 
+
+![](https://raw.githubusercontent.com/scizmeli/datascience_class_helper_files/master/five-questions-about-data-science.jpg)
+
+You can find more info about common data science question [here](https://docs.microsoft.com/bs-cyrl-ba/Azure/machine-learning/studio/data-science-for-beginners-the-5-questions-data-science-answers).
+# Business problems
+
+Common world business problems that are usually solved with data science :
+
+- Predict which products a customer might buy
+- Detect fraud
+- Calculate price elasticity
+- Product search engine
+- Customer segmentation
+- Optimizing how much to spend in AdWords
+- Evaluating marketing campaigns
+- Organizing new products into a product catalog
+# Main types of models
+## Classification 
+
+Classification can be done betweek two categories (binomial) or multiple categories. One evident business problem 
+solved by classification is *Product Categorization*
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/product-cat.PNG)
+
+Some of the most popular classification methods are :
+
+### naive Bayes 
+
+- good with multi-level input categories
+- product categorization
+- text classification
+
+### Decision trees
+- if-then situations
+- redundent and correlated inputs
+- easier to interpret
+
+### Logistic regression
+- class probabilities
+- probability of fraud
+- probability sensitivity analysis
+
+### Support vector machines 
+- many input variables
+- input correlated with outcome
+- less asumptions about input distributions
+
+## Scoring (regression)
+
+### linear regression 
+- predicts numerical trends 
+- prediction is linear addition of numeric inputs
+- relative impact of each input variable on the output
+- often good first guess
+- distribution of input variables matter
+- input variables need not be correlated
+
+    ![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/linear_regression1.png)
+
+## logistic regression
+- predicts 0 or 1
+- predicting probabilities of categories -> scoring
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/scorring.PNG)
+
+## Clustering (unsupervised)
+Unsupervised learning : Custering can be used when no outcomes are known (missing or non-existing yet). 
+It can help discovering patterns and relationships in the data. Some common clustering methods are : 
+
+### K-means clustering (unknown groups)
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/Class.PNG)
+
+### Association rules (Apriori)
+- Identify strong rules
+- Ex: Predict products that are usually bought together 
+- Useful for recommendations
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/association%20rules.png)
+
+### Nearest neighbor
+- Another method applicable for recommendations
+- Observe the behavior of others that are most similar (nearest) to the subject under study
+- Make a prediction for the subject
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/Nearest%20Neighbor%20classification.png)
+
+# Otokorelasyon: üç obje var bunlardan ikisi birbirine daha yakın. birbirlerine daha yakın olanların birbirine daha yakın olma olasılıgı 
+# fazladır.
+
+# otokorelasyon olmayan bir örnek: bir orman var bu ormanın icindeki görebilecegimiz orman sayısı.bir taraftan su geçiyo diger taraftan gecmiyo.su gecmeyen alanda daha az hayvan var. birbirine benzeyemiyo.cünkü arada cit var .
+
+## Exercise 6.1
+
+
+Find which data science models could be applied to the business problems given in column *Example Tasks* :
+1-logistic regression - ikili sınıflandırma yapılmalı (mail spam mı değil mi)
+2-linear regression
+3-
+4- k-means
+5-
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/Ex%206.1%20problem%20to%20model%20-%20exercise%20.png)

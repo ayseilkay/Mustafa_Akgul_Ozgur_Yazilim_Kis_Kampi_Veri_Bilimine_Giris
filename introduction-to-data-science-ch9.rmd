@@ -1,0 +1,69 @@
+
+---
+title: Introduction to data science - Ch9
+output: html_notebook
+---
+
+
+```{r}
+#bias : yanlılık
+#varyans:iyi bir model kurmak icin variance ı azaltmak gerekir
+# significant : anlamlılık ,önemlilik
+```
+# Common model problems :
+
+The most commonly found model problems are summarised below : 
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/model_problems.jpg)
+
+```{r}
+# overfitting : eğittigimiz modeli verisetinin görmedigi test verisiyle test ettigimizde düşük çıkarsa burada overfitting olması anlamaına
+#gelir
+
+```
+
+## Overfitting
+
+- A very popular problem
+- Checking for overfit is usually the first step of model validation
+- Overfit models are good on train data, they are not as good no test data
+- We have *training errors* of the training stage and *generalization errors* of the testing stage
+- Generalization errors are of course always larger, but we want both to be as close as possible -> otherwise overfit
+- Overfit is memorization of patterns in training data instead of detecting useful general rules
+- As a general rule, simpler models generalize better (but sometimes they are too simple!)
+Below is a comparison of underfit, overfit models with a balanced model :
+
+![](https://github.com/scizmeli/datascience_class_helper_files/raw/master/overfit_vs_underfit.png)
+## Quantifying model validity
+
+- A single split/model/evaluate/validate cycle is a *point estimate*. Might not be enough to characterize variations in data
+- The question is "how sensitive your conclusions are to variations in your data and procedures?" -> significance analysis
+- Don't report too earl... Never say things like : **“We have an accuracy of 90% on our training data”**
+- Rather say **"We saw accuracies of at least 80% on all but 5% of our reruns"**
+- Increasing the training dataset size tends to reduce overfitting
+## K-fold cross-validataion
+
+- Use cross-validation to go beyond point estimates
+- split/model/evaluate/validate multiple times iteratively to emulate variations on new data
+- Programming skills comes very useful for k-fold cross-validation
+- One needs to have a dataset big enough to be able to cross-validate
+
+![](https://raw.githubusercontent.com/scizmeli/datascience_class_helper_files/master/k-fold-cross-validation.png)
+
+Als watch the [Youtube video](https://www.youtube.com/watch?v=sFO2ff-gTh0) about K-fold cross-validation.
+## Keep in mind
+
+- Also checkout other overfit analysis methods : regularization, bagging
+- Also checkout methods of empirical resampling and bootstrapping
+- Iteratively repeat the sampling/
+```{r}
+# DECISION TREE
+# ENTROPY de datamızı hangi degiskene göre bölmemeiz gerektigine karar veriyoruz
+# entropy : düzensizligin sayısı 
+# biz entropy nin az olmasını isteriz.
+
+# gain : karar agacı dügümlerine kazancla karar veriyoruz.
+
+# gini index:saflıgı gösterir.kac sınıfta duralım
+```
+
